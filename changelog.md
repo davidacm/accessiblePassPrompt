@@ -1,3 +1,8 @@
+# version 0.3.
+
+* Updated the password input field. The foreground color now matches the background color. So, the text of the password shouln't be visible.
+* Now the "ensure" message in the password field is shorter.
+
 # version 0.2.
 
 * Fixed the message when the password has been typed. This use core.callLater. It was tested with strings of 700 characters, and the announcement works properly.

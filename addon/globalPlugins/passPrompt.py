@@ -99,9 +99,12 @@ class PassDialog(
 		self.callback = callback
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		sHelper = guiHelper.BoxSizerHelper(self, orientation=wx.VERTICAL)
+
 		# Translators: the label for password input.
-		passwordLabelText = _("Enter the password. Ensure that no one is listening or viewing the screen, or turn on the screen curtain for privacy.")
+		passwordLabelText = _("Enter the password. Ensure that no one is listening or viewing your password.")
 		self.passwordTextField = sHelper.addLabeledControl(passwordLabelText, wx.TextCtrl)
+		# next line should hide the text.
+		self.passwordTextField.SetForegroundColour(self.passwordTextField.GetBackgroundColour())
 
 		sHelper.addDialogDismissButtons(self.CreateButtonSizer(wx.OK | wx.CANCEL))
 		mainSizer.Add(sHelper.sizer, border=guiHelper.BORDER_FOR_DIALOGS, flag=wx.ALL)
