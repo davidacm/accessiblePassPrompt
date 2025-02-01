@@ -8,6 +8,11 @@ Its use is very simple: when you are in a text field, press NVDA + Windows + P, 
 
 If for some reason the focus is not the same as the focus prior to open the password dialog of this add-on, the password won't be written for security reasons.
 
+Notes:
+
+1. The script to open the dedicated password dialog is categorized as "System focus". So, see that category to change the gesture if needed.
+2. If you press the command to open the dedicated dialog and the dialog is already open, it will be closed. This can help if for some reason, you can't find the dialog.
+
 ## Download.
  The latest release is available to [download in this link](https://davidacm.github.io/getlatest/gh/davidacm/accessiblePassPrompt/?index=0)
 
