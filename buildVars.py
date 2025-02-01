@@ -23,9 +23,9 @@ addon_info = {
 	"addon_summary": _("accessible Pass Prompt"),
 	# Add-on description
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
-	"addon_description": _("""TODO"""),
+	"addon_description": _("""This add-on can show a dedicated dialog to enter a password in a text edit field. So, the user can review the password in an accessible way."""),
 	# version
-	"addon_version": "0.1",
+	"addon_version": "0.2",
 	# Author(s)
 	"addon_author": "David CM <dhf360@gmail.com>",
 	# URL for the add-on documentation support
