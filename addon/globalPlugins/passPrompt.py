@@ -52,17 +52,25 @@ def typeString(s):
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def __init__(self):
 		super(globalPluginHandler.GlobalPlugin, self).__init__()
-		self.focus = None
-		self.dialog = None
+		self._currentFocus = None
+		self._dialog = None
 
-	def typePassword(self, text):
-		self.currentFocus.setFocus()
-		if api.getFocusObject() == self.currentFocus:
+	def _clean(self):
+		""" it clears all variables used for the script askPassword """
+		print("zclearing")
+		self._currentFocus = None
+		if self._dialog and self._dialog.IsShown():
+			self._dialog.Destroy()
+		self._dialog = None
+
+	def _typePassword(self, text):
+		self._currentFocus.setFocus()
+		if api.getFocusObject() == self._currentFocus:
 			typeString(text)
 			core.callLater(100, ui.message, _("password typed"))
 		else:
-			ui.message(_("Error: the focus has changed. For security reasons, the password was not typed."))
-		self.currentFocus = None
+			core.callLater(100, ui.message, _("Error: the focus has changed. For security reasons, the password was not typed."))
+		self._clean()
 
 	@script(
 		_("shows a dialog to type a password, this password will be typed in the password field"),
@@ -70,19 +78,21 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		"kb:nvda+windows+p"
 	)
 	def script_askPassword(self, gesture):
-		if self.dialog:
-			self.dialog.Destroy()
-			self.dialog = None
+		if self._dialog:
+			self._clean()
 			ui.message(_("The dialog is already opened. Dialog is now closed, please try again."))
 			return
 		def run():
 			gui.mainFrame.prePopup()
-			self.dialog = PassDialog(None, self.typePassword)
-			self.dialog.ShowModal()
+			self._dialog = PassDialog(None, self._typePassword)
+			r = self._dialog.ShowModal()
 			gui.mainFrame.postPopup()
-		self.currentFocus = api.getFocusObject()
+			if r != wx.ID_OK:
+				self._clean()
+
+		self._currentFocus = api.getFocusObject()
 		# this only checks if the current field is a text edit field. The user could require to use it in non password fields too.
-		if Role['EDITABLETEXT'] == self.currentFocus.role:
+		if Role['EDITABLETEXT'] == self._currentFocus.role:
 			wx.CallAfter(run)
 		else:
 			ui.message(_("The current focused element is not an editable field"))
@@ -95,16 +105,26 @@ class PassDialog(
 
 	def __init__(self, parent, callback):
 		# Translators: Title of a dialog to ask for a password.
-		super().__init__(parent, title=_("Enter password"))
+		self.timeToClose = 180*1000
+		super().__init__(parent, title=_("Enter password. This dialog will be closed in %s seconds") % int(self.timeToClose/1000))
 		self.callback = callback
+		self.timer = core.callLater(self.timeToClose, self.Destroy)
+
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		sHelper = guiHelper.BoxSizerHelper(self, orientation=wx.VERTICAL)
 
 		# Translators: the label for password input.
 		passwordLabelText = _("Enter the password. Ensure that no one is listening or viewing your password.")
 		self.passwordTextField = sHelper.addLabeledControl(passwordLabelText, wx.TextCtrl)
+		self.passwordColour = self.passwordTextField.GetForegroundColour()
 		# next line should hide the text.
+		self.passwordTextField.SetThemeEnabled(False)
 		self.passwordTextField.SetForegroundColour(self.passwordTextField.GetBackgroundColour())
+
+		# Translators:  a checkbox to toggle visual visibility of the password.
+		self.showPasswordCheckbox = wx.CheckBox(self, label=_("Show password"))
+		self.showPasswordCheckbox.Bind(wx.EVT_CHECKBOX, self.onShowPasswordToggle)
+		sHelper.sizer.Add(self.showPasswordCheckbox, flag=wx.LEFT, border=10)
 
 		sHelper.addDialogDismissButtons(self.CreateButtonSizer(wx.OK | wx.CANCEL))
 		mainSizer.Add(sHelper.sizer, border=guiHelper.BORDER_FOR_DIALOGS, flag=wx.ALL)
@@ -115,12 +135,23 @@ class PassDialog(
 		self.CentreOnScreen()
 		self.passwordTextField.SetFocus()
 
+	def onShowPasswordToggle(self, event):
+		"""Toggles the visibility of the password in the text field."""
+		if self.showPasswordCheckbox.IsChecked():
+			self.passwordTextField.SetForegroundColour(self.passwordColour)
+		else:
+			self.passwordTextField.SetForegroundColour(self.passwordTextField.GetBackgroundColour())
+		self.passwordTextField.Refresh()
+
 	def onOk(self, evt):
 		text = self.passwordTextField.GetValue()
 		# We must use core.callLater rather than wx.CallLater to ensure that the callback runs within NVDA's core pump.
 		# If it didn't, and it directly or indirectly called wx.Yield, it could start executing NVDA's core pump from within the yield, causing recursion.
 		core.callLater(100, self.callback, text)
+		self.EndModal(wx.ID_OK)
+		self.timer.Stop()
 		self.Destroy()
 
 	def onCancel(self, evt):
+		self.timer.Stop()
 		self.Destroy()

@@ -1,3 +1,10 @@
+# version 0.4.
+
+* A checkbox to show or hide the password in the screen. By default the password is hidden when the dialog is opened.
+* A timer to close dialog after 180 seconds. In case the user forgets to close the dialog.
+* updated documentation about the timer to close the dialog.
+* Internal code changes.
+
 # version 0.3.
 
 * Updated the password input field. The foreground color now matches the background color. So, the text of the password shouln't be visible.
